@@ -60,4 +60,5 @@
 .X-mark {
   display: inline;
   border: gray solid 1px;
+  cursor: pointer;
 }

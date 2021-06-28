@@ -24,35 +24,54 @@ app.get("/data", async (req, res) => {
 
 app.post("/data", async (req, res) => {
   const { type, name, isChecked } = req.body.data;
+  console.log(type, name, isChecked);
   console.log("Post");
   if (type === "fixed") {
     const findOne = await Fixed.findOne({ where: { name } });
     console.log(findOne);
     findOne.isChecked = isChecked;
     findOne.save();
+    // 단순 조회 로직
+    const fixed = await Fixed.find();
+    const custom = await Custom.find();
+    res.json({
+      //db 조회 로직
+      fixed,
+      custom,
+    });
   } else {
     // custom 추가 삭제
     const findFix = await Fixed.findOne({ where: { name } });
+    const findCus = await Custom.findOne({ where: { name } });
     if (findFix) {
       //이미 fix에 존재하는 확장자
       res
         .status(400)
         .json({ message: "this extension has been exist in fixed" });
-    }
-
-    const findCus = await Custom.findOne({ where: { name } });
-    if (findCus) {
+    } else if (findCus) {
       //이미 custom에 존재하는 확장자
       res
         .status(400)
         .json({ message: "this extension has been exist in custom" });
+    } else {
+      const addCus = await Custom.create({ name });
+      addCus.save();
+      // 단순 조회 로직
+      const fixed = await Fixed.find();
+      const custom = await Custom.find();
+      res.json({
+        //db 조회 로직
+        fixed,
+        custom,
+      });
     }
-
-    const addCus = await Custom.create({ name });
-    addCus.save();
   }
+});
 
-  // 단순 조회 로직
+app.delete("/data", async (req, res) => {
+  console.log(req.query.name);
+  const findOne = await Custom.findOne({ where: { name: req.query.name } });
+  await findOne.remove();
   const fixed = await Fixed.find();
   const custom = await Custom.find();
   res.json({
@@ -60,11 +79,6 @@ app.post("/data", async (req, res) => {
     fixed,
     custom,
   });
-});
-
-app.delete("/data", (req, res) => {
-  console.log(req.params);
-  res.json({ message: "OO?" });
 });
 
 app.listen(process.env.PORT, function () {

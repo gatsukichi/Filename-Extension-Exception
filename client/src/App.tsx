@@ -12,6 +12,7 @@ type customExtension = {
 };
 
 function App() {
+  const [text, setText] = useState<string>("");
   const [fixed, setFixed] = useState<fixedExtension[]>([]);
   const [custom, setCustom] = useState<customExtension[]>([]);
   function checkAxios(update: {
@@ -29,6 +30,23 @@ function App() {
           },
         }
       )
+      .then((data: any) => {
+        console.log(data.data.fixed);
+        setFixed(data.data.fixed);
+        setCustom(data.data.custom);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+  function deleteAxios(name: string) {
+    axios
+      .delete("http://localhost:4000/data", {
+        params: { name },
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
       .then((data: any) => {
         console.log(data.data.fixed);
         setFixed(data.data.fixed);
@@ -61,29 +79,29 @@ function App() {
                 {el.isChecked ? (
                   <input
                     type="checkbox"
-                    checked
+                    defaultChecked
                     value={el.name}
-                    onChange={(e) => {
+                    onClick={(e) => {
                       checkAxios({
-                        name: e.target.value,
+                        name: el.name,
                         isChecked: !el.isChecked,
                         type: "fixed",
                       });
-                      console.log(e.target.value, !el.isChecked);
+                      console.log(el.name, !el.isChecked);
                     }}
                   ></input>
                 ) : (
                   <input
                     type="checkbox"
                     value={el.name}
-                    onChange={(e) => {
+                    onClick={(e) => {
                       // e.target.checked = !e.target.checked;
                       checkAxios({
-                        name: e.target.value,
+                        name: el.name,
                         isChecked: !el.isChecked,
-                        type: "custom",
+                        type: "fixed",
                       });
-                      console.log(e.target.value, !el.isChecked);
+                      console.log(el.name, !el.isChecked);
                     }}
                   ></input>
                 )}
@@ -94,13 +112,36 @@ function App() {
         </div>
       </div>
       <div>커스텀 확장자</div>
-      <input type="text"></input>
+      <form
+        onSubmit={(e) => {
+          // e.preventDefault();
+          checkAxios({
+            name: text,
+            isChecked: false,
+            type: "custom",
+          });
+        }}
+      >
+        <input
+          type="text"
+          onChange={(e) => {
+            setText(e.target.value);
+          }}
+        ></input>
+      </form>
       <div className="customContainer">
         {custom.map((el, idx) => {
           return (
             <div className="customBox" key={idx}>
               <div className="label">{el.name}</div>
-              <div className="X-mark">X</div>
+              <div
+                className="X-mark"
+                onClick={(e) => {
+                  deleteAxios(el.name);
+                }}
+              >
+                X
+              </div>
             </div>
           );
         })}
